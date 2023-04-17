@@ -708,7 +708,9 @@ class FeatureSetCalculator(object):
         if base_frame_empty:
             feature_values = []
             for f in features:
-                feature_values.append((f, np.full(f.number_output_features, np.nan)))
+                feature_values.append(
+                    (f, np.full(f.number_output_features, f.default_value)),
+                )
                 progress_callback(1 / float(self.num_features))
             frame = update_feature_columns(feature_values, frame)
         else:
