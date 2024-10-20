@@ -239,11 +239,13 @@ class TestKurtosis(PrimitiveTestBase):
         given_answer = primitive_func(data)
         assert np.isclose(answer, given_answer, atol=0.01)
 
-        data = pd.Series([sqrt(x) for x in list(range(100))], dtype=dtype)
-        answer = -0.46
-        primitive_func = self.primitive().get_function()
-        given_answer = primitive_func(data)
-        assert np.isclose(answer, given_answer, atol=0.01)
+        if dtype == "float64":
+            # Series contains floating point values - only check with float dtype
+            data = pd.Series([sqrt(x) for x in list(range(100))], dtype=dtype)
+            answer = -0.46
+            primitive_func = self.primitive().get_function()
+            given_answer = primitive_func(data)
+            assert np.isclose(answer, given_answer, atol=0.01)
 
     def test_nan(self):
         data = pd.Series([np.nan, 5, 3], dtype="float64")
@@ -652,11 +654,11 @@ class TestDateFirstEvent(PrimitiveTestBase):
         given_answer = primitive_func(case)
         assert pd.isna(given_answer)
 
-    def test_with_featuretools(self, pd_es):
+    def test_with_featuretools(self, es):
         transform, aggregation = find_applicable_primitives(self.primitive)
         primitive_instance = self.primitive()
         aggregation.append(primitive_instance)
-        valid_dfs(pd_es, aggregation, transform, self.primitive)
+        valid_dfs(es, aggregation, transform, self.primitive)
 
     def test_serialize(self, es):
         check_serialize(self.primitive, es, target_dataframe_name="sessions")

@@ -1,11 +1,9 @@
 import numpy as np
 import pandas as pd
-import pandas.api.types as pdtypes
 from woodwork.column_schema import ColumnSchema
 from woodwork.logical_types import BooleanNullable, Datetime, Ordinal
 
 from featuretools.primitives.base.transform_primitive_base import TransformPrimitive
-from featuretools.utils.gen_utils import Library
 
 
 class LessThanEqualTo(TransformPrimitive):
@@ -32,13 +30,13 @@ class LessThanEqualTo(TransformPrimitive):
         [ColumnSchema(logical_type=Ordinal), ColumnSchema(logical_type=Ordinal)],
     ]
     return_type = ColumnSchema(logical_type=BooleanNullable)
-    compatibility = [Library.PANDAS, Library.DASK, Library.SPARK]
+
     description_template = "whether {} is less than or equal to {}"
 
     def get_function(self):
         def less_than_equal(val1, val2):
-            val1_is_categorical = pdtypes.is_categorical_dtype(val1)
-            val2_is_categorical = pdtypes.is_categorical_dtype(val2)
+            val1_is_categorical = isinstance(val1.dtype, pd.CategoricalDtype)
+            val2_is_categorical = isinstance(val2.dtype, pd.CategoricalDtype)
             if val1_is_categorical and val2_is_categorical:
                 if not all(val1.cat.categories == val2.cat.categories):
                     return val1.where(pd.isnull, np.nan)

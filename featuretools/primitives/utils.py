@@ -4,7 +4,7 @@ from inspect import getfullargspec, getsource, isclass
 from typing import Dict, List
 
 import pandas as pd
-from woodwork import list_logical_types, list_semantic_tags
+from woodwork import list_logical_types, list_semantic_tags, type_system
 from woodwork.column_schema import ColumnSchema
 from woodwork.logical_types import NaturalLanguage
 
@@ -15,7 +15,7 @@ from featuretools.primitives.base import (
     PrimitiveBase,
     TransformPrimitive,
 )
-from featuretools.utils.gen_utils import Library, find_descendents
+from featuretools.utils.gen_utils import find_descendents
 
 
 def _get_primitives(primitive_kind):
@@ -32,23 +32,28 @@ def _get_primitives(primitive_kind):
 
 
 def get_aggregation_primitives():
-    """Returns all aggregation primitives, regardless
-    of compatibility
-    """
+    """Returns all aggregation primitives"""
     return _get_primitives(featuretools.primitives.AggregationPrimitive)
 
 
 def get_transform_primitives():
-    """Returns all transform primitives, regardless
-    of compatibility
-    """
+    """Returns all transform primitives"""
     return _get_primitives(featuretools.primitives.TransformPrimitive)
 
 
+def get_all_primitives():
+    """Helper function to return all primitives"""
+    primitives = set()
+    for attribute_string in dir(featuretools.primitives):
+        attribute = getattr(featuretools.primitives, attribute_string)
+        if isclass(attribute):
+            if issubclass(attribute, PrimitiveBase) and attribute.name:
+                primitives.add(attribute)
+    return {prim.__name__: prim for prim in primitives}
+
+
 def _get_natural_language_primitives():
-    """Returns all Natural Language transform primitives,
-    regardless of compatibility
-    """
+    """Returns all Natural Language transform primitives"""
     transform_primitives = get_transform_primitives()
 
     def _natural_language_in_input_type(primitive):
@@ -76,18 +81,10 @@ def list_primitives():
     trans_names, trans_primitives, valid_inputs, return_type = _get_names_primitives(
         get_transform_primitives,
     )
-    trans_dask = [
-        Library.DASK in primitive.compatibility for primitive in trans_primitives
-    ]
-    trans_spark = [
-        Library.SPARK in primitive.compatibility for primitive in trans_primitives
-    ]
     transform_df = pd.DataFrame(
         {
             "name": trans_names,
             "description": _get_descriptions(trans_primitives),
-            "dask_compatible": trans_dask,
-            "spark_compatible": trans_spark,
             "valid_inputs": valid_inputs,
             "return_type": return_type,
         },
@@ -97,16 +94,10 @@ def list_primitives():
     agg_names, agg_primitives, valid_inputs, return_type = _get_names_primitives(
         get_aggregation_primitives,
     )
-    agg_dask = [Library.DASK in primitive.compatibility for primitive in agg_primitives]
-    agg_spark = [
-        Library.SPARK in primitive.compatibility for primitive in agg_primitives
-    ]
     agg_df = pd.DataFrame(
         {
             "name": agg_names,
             "description": _get_descriptions(agg_primitives),
-            "dask_compatible": agg_dask,
-            "spark_compatible": agg_spark,
             "valid_inputs": valid_inputs,
             "return_type": return_type,
         },
@@ -116,8 +107,6 @@ def list_primitives():
     columns = [
         "name",
         "type",
-        "dask_compatible",
-        "spark_compatible",
         "description",
         "valid_inputs",
         "return_type",
@@ -370,7 +359,7 @@ def load_primitive_from_file(filepath):
     return primitives[0]
 
 
-def serialize_primitive(primitive):
+def serialize_primitive(primitive: PrimitiveBase):
     """build a dictionary with the data necessary to construct the given primitive"""
     args_dict = {name: val for name, val in primitive.get_arguments()}
     cls = type(primitive)
@@ -433,3 +422,8 @@ class PrimitivesDeserializer(object):
 
             if cls_key == search_key:
                 return cls
+
+
+def get_all_logical_type_names():
+    """Helper function that returns all registered woodwork logical types"""
+    return {lt.__name__: lt for lt in type_system.registered_types}

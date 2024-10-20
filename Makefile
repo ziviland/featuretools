@@ -9,14 +9,14 @@ clean:
 .PHONY: lint
 lint:
 	python docs/notebook_version_standardizer.py check-execution
-	black . --config=./pyproject.toml --check
-	ruff . --config=./pyproject.toml
+	ruff check . --config=./pyproject.toml
+	ruff format . --check --config=./pyproject.toml
 
 .PHONY: lint-fix
 lint-fix:
 	python docs/notebook_version_standardizer.py standardize
-	black . --config=./pyproject.toml
-	ruff . --fix --config=./pyproject.toml
+	ruff check . --fix --config=./pyproject.toml
+	ruff format . --config=./pyproject.toml
 
 .PHONY: test
 test:
@@ -41,7 +41,7 @@ installdeps-test: upgradepip
 
 .PHONY: checkdeps
 checkdeps:
-	$(eval allow_list='holidays|scipy|numpy|pandas|tqdm|cloudpickle|distributed|dask|psutil|pyspark|woodwork')
+	$(eval allow_list='holidays|scipy|numpy|pandas|tqdm|cloudpickle|distributed|dask|psutil|woodwork')
 	pip freeze | grep -v "alteryx/featuretools.git" | grep -E $(allow_list) > $(OUTPUT_PATH)
 
 .PHONY: upgradepip

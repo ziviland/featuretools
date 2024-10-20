@@ -11,9 +11,10 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX",
     "Operating System :: Unix",
@@ -27,19 +28,17 @@ maintainers = [
 ]
 keywords = ["feature engineering", "data science", "machine learning"]
 license = {text = "BSD 3-clause"}
-requires-python = ">=3.8,<4"
+requires-python = ">=3.9,<4"
 dependencies = [
     "cloudpickle >= 1.5.0",
-    "dask[dataframe] >= 2022.11.1",
-    "distributed >= 2022.11.1",
-    "holidays >= 0.13",
-    "numpy >= 1.21.0",
+    "holidays >= 0.17",
+    "numpy >= 1.25.0, < 2.0.0",
     "packaging >= 20.0",
-    "pandas >= 1.5.0, <2.0.0",
-    "psutil >= 5.6.6",
-    "scipy >= 1.4.0",
-    "tqdm >= 4.32.0",
-    "woodwork[dask] >= 0.23.0",
+    "pandas >= 2.0.0",
+    "psutil >= 5.7.0",
+    "scipy >= 1.10.0",
+    "tqdm >= 4.66.3",
+    "woodwork >= 0.28.0",
 ]
 
 [project.urls]
@@ -52,48 +51,48 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "boto3 >= 1.17.46",
+    "boto3 >= 1.34.32",
     "composeml >= 0.8.0",
     "graphviz >= 0.8.4",
-    "moto[all] >= 3.0.7",
-    "pip >= 21.3.1",
-    "pyarrow >= 3.0.0",
+    "moto[all] >= 5.0.0",
+    "pip >= 23.3.0",
+    "pyarrow >= 14.0.1",
     "pympler >= 0.8",
     "pytest >= 7.1.2",
     "pytest-cov >= 3.0.0",
     "pytest-xdist >= 2.5.0",
     "smart-open >= 5.0.0",
-    "urllib3 >= 1.26.5",
-    "pytest-timeout >= 2.1.0"
+    "urllib3 >= 1.26.18",
+    "pytest-timeout >= 2.1.0",
 ]
-spark = [
-    "woodwork[spark] >= 0.23.0",
-    "pyspark >= 3.2.2, <3.4.0",
-    "numpy < 1.24.0",
-]
-updater = [
-    "alteryx-open-src-update-checker >= 2.1.0"
+dask = [
+    "dask[dataframe] >= 2023.2.0",
+    "distributed >= 2023.2.0",
 ]
 tsfresh = [
     "featuretools-tsfresh-primitives >= 1.0.0",
-]
-nlp = [
-    "nlp-primitives[complete] >= 2.0.0",
 ]
 autonormalize = [
     "autonormalize >= 2.0.1",
 ]
 sql = [
     "featuretools_sql >= 0.0.1",
+    "psycopg2-binary >= 2.9.3",
 ]
 sklearn = [
     "featuretools-sklearn-transformer >= 1.0.0",
+]
+premium = [
+    "premium-primitives >= 0.0.3",
+]
+nlp = [
+    "nlp-primitives >= 2.12.0",
 ]
 docs = [
     "ipython == 8.4.0",
     "jupyter == 1.0.0",
     "jupyter-client >= 8.0.2",
-    "matplotlib == 3.5.2",
+    "matplotlib == 3.7.2",
     "Sphinx == 5.1.1",
     "nbsphinx == 0.8.9",
     "nbconvert == 6.5.0",
@@ -101,19 +100,18 @@ docs = [
     "sphinx-inline-tabs == 2022.1.2b11",
     "sphinx-copybutton == 0.5.0",
     "myst-parser == 0.18.0",
-    "nlp_primitives >= 2.3.0",
     "autonormalize >= 2.0.1",
     "click >= 7.0.0",
-    "featuretools[sklearn,spark,test]",
+    "featuretools[dask,test]",
 ]
 dev = [
-    "ruff >= 0.0.239",
+    "ruff >= 0.1.6",
     "black[jupyter] >= 23.1.0",
     "pre-commit >= 2.20.0",
-    "featuretools[docs,spark,test]",
+    "featuretools[docs,dask,test]",
 ]
 complete = [
-    "featuretools[autonormalize,nlp,sklearn,spark,sql,tsfresh,updater]",
+    "featuretools[premium,nlp,dask]",
 ]
 
 [tool.setuptools]
@@ -146,7 +144,6 @@ namespaces = true
 [tool.setuptools.dynamic]
 version = {attr = "featuretools.version.__version__"}
 
-
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=featuretools/tests/entry_point_tests/add-ons"
 testpaths = [
@@ -157,14 +154,11 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning"
 ]
 
-[tool.black]
-line-length = 88
-target-version = ["py310"]
-
 [tool.ruff]
 line-length = 88
-ignore = ["E501"]
-select = [
+target-version = "py311"
+lint.ignore = ["E501"]
+lint.select = [
     # Pyflakes
     "F",
     # Pycodestyle
@@ -175,10 +169,10 @@ select = [
 ]
 src = ["featuretools"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401", "I001", "E501"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["featuretools"]
 
 [tool.coverage.run]

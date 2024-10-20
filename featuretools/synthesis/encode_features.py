@@ -82,10 +82,6 @@ def encode_features(
                                                        drop_first=True)
             f_encoded
     """
-    if not isinstance(feature_matrix, pd.DataFrame):
-        msg = "feature_matrix must be a Pandas DataFrame"
-        raise TypeError(msg)
-
     if inplace:
         X = feature_matrix
     else:
@@ -142,13 +138,14 @@ def encode_features(
         # Remove 0 count category values
         val_counts = val_counts[val_counts > 0].to_frame()
         index_name = val_counts.index.name
+        val_counts = val_counts.rename(columns={val_counts.columns[0]: "count"})
         if index_name is None:
             if "index" in val_counts.columns:
                 index_name = "level_0"
             else:
                 index_name = "index"
         val_counts.reset_index(inplace=True)
-        val_counts = val_counts.sort_values([f.get_name(), index_name], ascending=False)
+        val_counts = val_counts.sort_values(["count", index_name], ascending=False)
         val_counts.set_index(index_name, inplace=True)
         select_n = top_n
         if isinstance(top_n, dict):

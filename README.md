@@ -6,8 +6,8 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/alteryx/featuretools/actions?query=branch%3Amain+workflow%3ATests" target="_blank">
-        <img src="https://github.com/alteryx/featuretools/workflows/Tests/badge.svg?branch=main" alt="Tests" />
+    <a href="https://github.com/alteryx/featuretools/actions/workflows/tests_with_latest_deps.yaml" alt="Tests" target="_blank">
+        <img src="https://github.com/alteryx/featuretools/actions/workflows/tests_with_latest_deps.yaml/badge.svg?branch=main" alt="Tests" />
     </a>
     <a href="https://codecov.io/gh/alteryx/featuretools">
         <img src="https://codecov.io/gh/alteryx/featuretools/branch/main/graph/badge.svg"/>
@@ -25,7 +25,7 @@
         <img src="http://img.shields.io/badge/questions-on_stackoverflow-blue.svg" alt="StackOverflow" />
     </a>
     <a href="https://pepy.tech/project/featuretools" target="_blank">
-        <img src="https://pepy.tech/badge/featuretools/month" alt="PyPI Downloads" />
+        <img src="https://static.pepy.tech/badge/featuretools/month" alt="PyPI Downloads" />
     </a>
 </p>
 <hr>
@@ -47,35 +47,30 @@ conda install -c conda-forge featuretools
 
 ### Add-ons
 
-You can install add-ons individually or all at once by running
+You can install add-ons individually or all at once by running:
 
 ```
 python -m pip install "featuretools[complete]"
 ```
 
-**Update checker** - Receive automatic notifications of new Featuretools releases
+**Premium Primitives** - Use Premium Primitives from the premium-primitives repo
 
 ```
-python -m pip install "featuretools[updater]"
+python -m pip install "featuretools[premium]"
 ```
 
-**NLP Primitives** - Use Natural Language Processing Primitives:
+**NLP Primitives** - Use Natural Language Primitives from the nlp-primitives repo
 
 ```
 python -m pip install "featuretools[nlp]"
 ```
 
-**TSFresh Primitives** - Use 60+ primitives from [tsfresh](https://tsfresh.readthedocs.io/en/latest/) within Featuretools
+**Dask Support** - Use Dask to run DFS with njobs > 1
 
 ```
-python -m pip install "featuretools[tsfresh]"
+python -m pip install "featuretools[dask]"
 ```
 
-**SQL** - Automatic EntitySet generation from relational data stored in a SQL database: 
-
-```
-python -m pip install "featuretools[sql]"
-```
 ## Example
 Below is an example of using Deep Feature Synthesis (DFS) to perform automated feature engineering. In this example, we apply DFS to a multi-table dataset consisting of timestamped customer transactions.
 

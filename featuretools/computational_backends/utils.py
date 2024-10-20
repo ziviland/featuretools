@@ -5,7 +5,6 @@ import warnings
 from datetime import datetime
 from functools import wraps
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import psutil
@@ -14,7 +13,7 @@ from woodwork.logical_types import Datetime, Double
 from featuretools.entityset.relationship import RelationshipPath
 from featuretools.feature_base import AggregationFeature, DirectFeature
 from featuretools.utils import Trie
-from featuretools.utils.gen_utils import Library
+from featuretools.utils.gen_utils import import_or_none
 from featuretools.utils.wrangle import _check_time_type, _check_timedelta
 
 logger = logging.getLogger("featuretools.computational_backend")
@@ -22,7 +21,7 @@ logger = logging.getLogger("featuretools.computational_backend")
 
 def bin_cutoff_times(cutoff_time, bin_size):
     binned_cutoff_time = cutoff_time.ww.copy()
-    if type(bin_size) == int:
+    if isinstance(bin_size, int):
         binned_cutoff_time["time"] = binned_cutoff_time["time"].apply(
             lambda x: x / bin_size * bin_size,
         )
@@ -213,27 +212,24 @@ def get_client_cluster():
     """
     Separated out the imports to make it easier to mock during testing
     """
-    from distributed import Client, LocalCluster
+    distributed = import_or_none("distributed")
+    Client = distributed.Client
+    LocalCluster = distributed.LocalCluster
 
     return Client, LocalCluster
 
 
+CutoffTimeType = typing.Union[pd.DataFrame, str, datetime]
+
+
 def _validate_cutoff_time(
-    cutoff_time: typing.Union[dd.DataFrame, pd.DataFrame, str, datetime],
+    cutoff_time: CutoffTimeType,
     target_dataframe,
 ):
     """
     Verify that the cutoff time is a single value or a pandas dataframe with the proper columns
     containing no duplicate rows
     """
-    if isinstance(cutoff_time, dd.DataFrame):
-        msg = (
-            "cutoff_time should be a Pandas DataFrame: "
-            "computing cutoff_time, this may take a while"
-        )
-        warnings.warn(msg)
-        cutoff_time = cutoff_time.compute()
-
     if isinstance(cutoff_time, pd.DataFrame):
         cutoff_time = cutoff_time.reset_index(drop=True)
 
@@ -388,15 +384,6 @@ def get_ww_types_from_features(
             logical_types[column] = cutoff_schema.logical_types[column]
             semantic_tags[column] = cutoff_schema.semantic_tags[column]
             origins[column] = "base"
-
-    if entityset.dataframe_type in (Library.DASK, Library.SPARK):
-        target_dataframe_name = features[0].dataframe_name
-        table_schema = entityset[target_dataframe_name].ww.schema
-        index_col = table_schema.index
-        logical_types[index_col] = table_schema.logical_types[index_col]
-        semantic_tags[index_col] = table_schema.semantic_tags[index_col]
-        semantic_tags[index_col] -= {"index"}
-        origins[index_col] = "base"
 
     ww_init = {
         "logical_types": logical_types,

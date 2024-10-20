@@ -2,19 +2,16 @@ import json
 import os
 import tarfile
 import tempfile
+from inspect import getfullargspec
 
-import dask.dataframe as dd
 import pandas as pd
 import woodwork.type_sys.type_system as ww_type_system
 from woodwork.deserialize import read_woodwork_table
 
 from featuretools.entityset.relationship import Relationship
-from featuretools.utils.gen_utils import Library, import_or_none
 from featuretools.utils.s3_utils import get_transport_params, use_smartopen_es
 from featuretools.utils.schema_utils import check_schema_version
 from featuretools.utils.wrangle import _is_local_tar, _is_s3, _is_url
-
-ps = import_or_none("pyspark.pandas")
 
 
 def description_to_entityset(description, **kwargs):
@@ -45,7 +42,7 @@ def description_to_entityset(description, **kwargs):
                     kwargs["filename"] = df["name"] + ".parquet"
             dataframe = read_woodwork_table(data_path, validate=False, **kwargs)
         else:
-            dataframe = empty_dataframe(df, description["data_type"])
+            dataframe = empty_dataframe(df)
 
         entityset.add_dataframe(dataframe)
 
@@ -56,7 +53,7 @@ def description_to_entityset(description, **kwargs):
     return entityset
 
 
-def empty_dataframe(description, data_type=Library.PANDAS):
+def empty_dataframe(description):
     """Deserialize empty dataframe from dataframe description.
 
     Args:
@@ -105,10 +102,6 @@ def empty_dataframe(description, data_type=Library.PANDAS):
             category_dtypes[col_name] = cat_object
 
     dataframe = pd.DataFrame(columns=columns).astype(category_dtypes)
-    if data_type == Library.DASK:
-        dataframe = dd.from_pandas(dataframe, npartitions=1)
-    elif data_type == Library.SPARK:
-        dataframe = ps.from_pandas(dataframe)
 
     dataframe.ww.init(
         name=description.get("name"),
@@ -148,6 +141,8 @@ def read_data_description(path):
 def read_entityset(path, profile_name=None, **kwargs):
     """Read entityset from disk, S3 path, or URL.
 
+    NOTE: Never attempt to read an archived EntitySet from an untrusted source.
+
     Args:
         path (str): Directory on disk, S3 path, or URL to read `data_description.json`.
         profile_name (str, bool): The AWS profile specified to write to S3. Will default to None and search for AWS credentials.
@@ -167,7 +162,12 @@ def read_entityset(path, profile_name=None, **kwargs):
                 use_smartopen_es(local_path, path, transport_params)
 
             with tarfile.open(str(local_path)) as tar:
-                tar.extractall(path=tmpdir)
+                if "filter" in getfullargspec(tar.extractall).kwonlyargs:
+                    tar.extractall(path=tmpdir, filter="data")
+                else:
+                    raise RuntimeError(
+                        "Please upgrade your Python version to the latest patch release to allow for safe extraction of the EntitySet archive.",
+                    )
 
             data_description = read_data_description(tmpdir)
             return description_to_entityset(data_description, **kwargs)
